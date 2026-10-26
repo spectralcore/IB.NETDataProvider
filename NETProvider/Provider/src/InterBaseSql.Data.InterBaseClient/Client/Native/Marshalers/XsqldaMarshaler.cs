@@ -12,6 +12,7 @@
  *
  *    The Initial Developer(s) of the Original Code are listed below.
  *    Portions created by Embarcadero are Copyright (C) Embarcadero.
+ *    Portions created by Spectral Core are Copyright (C) Spectral Core.
  *
  *    All Rights Reserved.
  */
@@ -106,6 +107,8 @@ internal static class XsqldaMarshaler
 				if (descriptor[i].HasDataType() && descriptor[i].DbDataType != DbDataType.Null)
 				{
 					var buffer = descriptor[i].DbValue.GetBytes();
+					// Spectral Core patch: encoding may widen a text value past its described length
+					xsqlvar[i].sqllen = descriptor[i].Length;
 					// API expects booleans to be in a smallint GetBytes returns a byte[] of only 1
 					if (descriptor[i].DbDataType == DbDataType.Boolean)
 						Array.Resize(ref buffer, descriptor[i].Length);
@@ -149,6 +152,8 @@ internal static class XsqldaMarshaler
 				if (descriptor[i].HasDataType())
 				{
 					var buffer = descriptor[i].DbValue.GetBytes();
+					// Spectral Core patch: encoding may widen a text value past its described length
+					xsqlvar_v1[i].sqllen = descriptor[i].Length;
 					// API expects booleans to be in a smallint GetBytes returns a byte[] of only 1
 					if (descriptor[i].DbDataType == DbDataType.Boolean)
 						Array.Resize(ref buffer, descriptor[i].Length);

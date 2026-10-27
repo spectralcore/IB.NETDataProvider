@@ -12,6 +12,7 @@
  *
  *    The Initial Developer(s) of the Original Code are listed below.
  *    Portions created by Embarcadero are Copyright (C) Embarcadero.
+ *    Portions created by Spectral Core are Copyright (C) Spectral Core.
  *
  *    All Rights Reserved.
  */
@@ -80,20 +81,24 @@ public class IBClientFactory
 
 		Platform += id.ToString();
 
-		if (_registeredType.Count == 0)
+		// Spectral Core patch: the first connections can open in parallel, so the registry is filled once, under a lock
+		lock (_registeredType)
 		{
-			foreach (Type aType in currAssembly.GetTypes())
+			if (_registeredType.Count == 0)
 			{
-				if (!aType.IsClass || aType.IsAbstract ||
-					!aType.GetInterfaces().Contains(typeof(IIBClient)))
+				foreach (Type aType in currAssembly.GetTypes())
 				{
-					continue;
-				}
+					if (!aType.IsClass || aType.IsAbstract ||
+						!aType.GetInterfaces().Contains(typeof(IIBClient)))
+					{
+						continue;
+					}
 
-				if (!_registeredType.TryGetValue(aType.Name, out type))
-				{
-					var aPlatform = (IIBClient)Activator.CreateInstance(aType);
-					_registeredType.Add(aPlatform.Platform + aPlatform.ServerType(), aType);
+					if (!_registeredType.TryGetValue(aType.Name, out type))
+					{
+						var aPlatform = (IIBClient)Activator.CreateInstance(aType);
+						_registeredType.Add(aPlatform.Platform + aPlatform.ServerType(), aType);
+					}
 				}
 			}
 		}

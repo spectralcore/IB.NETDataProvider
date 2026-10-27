@@ -12,6 +12,7 @@
  *
  *    The Initial Developer(s) of the Original Code are listed below.
  *    Portions created by Embarcadero are Copyright (C) Embarcadero.
+ *    Portions created by Spectral Core are Copyright (C) Spectral Core.
  *
  *    All Rights Reserved.
  */
@@ -415,8 +416,10 @@ internal sealed class DbField
 						{
 							var s = Charset.GetString(buffer, 0, buffer.Length);
 
+							// Spectral Core patch: only padding is cut. InterBase describes a column read through a wider connection
+							// charset with the column's own byte length, which makes CharCount too small for the data
 							if ((Length % Charset.BytesPerCharacter) == 0 &&
-								s.Length > CharCount)
+								s.Length > CharCount && string.IsNullOrWhiteSpace(s.Substring(CharCount)))
 							{
 								s = s.Substring(0, CharCount);
 							}

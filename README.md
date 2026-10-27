@@ -1,5 +1,7 @@
 # InterBase .NET Data Provider
 
+> **Spectral Core fork.** This branch carries Spectral Core's modifications of the 10.0.3 provider, listed with their dates in [SPECTRALCORE.md](SPECTRALCORE.md).
+
 # 10.0.3 Summary
 
 # IMPORTANT - Do not use 10.0.2 if needing to make remote connections.

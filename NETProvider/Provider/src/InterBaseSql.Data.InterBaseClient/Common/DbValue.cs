@@ -12,6 +12,7 @@
  *
  *    The Initial Developer(s) of the Original Code are listed below.
  *    Portions created by Embarcadero are Copyright (C) Embarcadero.
+ *    Portions created by Spectral Core are Copyright (C) Spectral Core.
  *
  *    All Rights Reserved.
  */
@@ -354,7 +355,6 @@ internal sealed class DbValue
 		{
 			case DbDataType.Char:
 				{
-					var buffer = new byte[Field.Length];
 					byte[] bytes;
 
 					if (Field.Charset.IsOctetsCharset)
@@ -372,14 +372,16 @@ internal sealed class DbValue
 					}
 					else
 					{
-						var svalue = GetString();
-						if ((Field.Length % Field.Charset.BytesPerCharacter) == 0 && svalue.Length > Field.CharCount)
+						// Spectral Core patch: the value goes out whole and the server checks its length in the column's charset.
+						// InterBase describes a column bound through a wider connection charset with the column's byte length
+						bytes = Field.Charset.GetBytes(GetString());
+						if (bytes.Length > Field.Length)
 						{
-							throw IscException.ForErrorCodes(new[] { IscCodes.isc_arith_except, IscCodes.isc_string_truncation });
+							Field.Length = (short)bytes.Length;
 						}
-						bytes = Field.Charset.GetBytes(svalue);
 					}
 
+					var buffer = new byte[Field.Length];
 					for (var i = 0; i < buffer.Length; i++)
 					{
 						buffer[i] = (byte)' ';
@@ -390,7 +392,6 @@ internal sealed class DbValue
 
 			case DbDataType.VarChar:
 				{
-					var buffer = new byte[Field.Length + 2];
 					byte[] bytes;
 
 					if (Field.Charset.IsOctetsCharset)
@@ -408,14 +409,16 @@ internal sealed class DbValue
 					}
 					else
 					{
-						var svalue = GetString();
-						if ((Field.Length % Field.Charset.BytesPerCharacter) == 0 && svalue.Length > Field.CharCount)
+						// Spectral Core patch: the value goes out whole and the server checks its length in the column's charset.
+						// InterBase describes a column bound through a wider connection charset with the column's byte length
+						bytes = Field.Charset.GetBytes(GetString());
+						if (bytes.Length > Field.Length)
 						{
-							throw IscException.ForErrorCodes(new[] { IscCodes.isc_arith_except, IscCodes.isc_string_truncation });
+							Field.Length = (short)bytes.Length;
 						}
-						bytes = Field.Charset.GetBytes(svalue);
 					}
 
+					var buffer = new byte[Field.Length + 2];
 					Buffer.BlockCopy(BitConverter.GetBytes((short)bytes.Length), 0, buffer, 0, 2);
 					Buffer.BlockCopy(bytes, 0, buffer, 2, bytes.Length);
 					return buffer;
@@ -505,7 +508,6 @@ internal sealed class DbValue
 		{
 			case DbDataType.Char:
 				{
-					var buffer = new byte[Field.Length];
 					byte[] bytes;
 
 					if (Field.Charset.IsOctetsCharset)
@@ -523,14 +525,16 @@ internal sealed class DbValue
 					}
 					else
 					{
-						var svalue = await GetStringAsync(cancellationToken).ConfigureAwait(false);
-						if ((Field.Length % Field.Charset.BytesPerCharacter) == 0 && svalue.Length > Field.CharCount)
+						// Spectral Core patch: the value goes out whole and the server checks its length in the column's charset.
+						// InterBase describes a column bound through a wider connection charset with the column's byte length
+						bytes = Field.Charset.GetBytes(await GetStringAsync(cancellationToken).ConfigureAwait(false));
+						if (bytes.Length > Field.Length)
 						{
-							throw IscException.ForErrorCodes(new[] { IscCodes.isc_arith_except, IscCodes.isc_string_truncation });
+							Field.Length = (short)bytes.Length;
 						}
-						bytes = Field.Charset.GetBytes(svalue);
 					}
 
+					var buffer = new byte[Field.Length];
 					for (var i = 0; i < buffer.Length; i++)
 					{
 						buffer[i] = (byte)' ';
@@ -541,7 +545,6 @@ internal sealed class DbValue
 
 			case DbDataType.VarChar:
 				{
-					var buffer = new byte[Field.Length + 2];
 					byte[] bytes;
 
 					if (Field.Charset.IsOctetsCharset)
@@ -559,14 +562,16 @@ internal sealed class DbValue
 					}
 					else
 					{
-						var svalue = await GetStringAsync(cancellationToken).ConfigureAwait(false);
-						if ((Field.Length % Field.Charset.BytesPerCharacter) == 0 && svalue.Length > Field.CharCount)
+						// Spectral Core patch: the value goes out whole and the server checks its length in the column's charset.
+						// InterBase describes a column bound through a wider connection charset with the column's byte length
+						bytes = Field.Charset.GetBytes(await GetStringAsync(cancellationToken).ConfigureAwait(false));
+						if (bytes.Length > Field.Length)
 						{
-							throw IscException.ForErrorCodes(new[] { IscCodes.isc_arith_except, IscCodes.isc_string_truncation });
+							Field.Length = (short)bytes.Length;
 						}
-						bytes = Field.Charset.GetBytes(svalue);
 					}
 
+					var buffer = new byte[Field.Length + 2];
 					Buffer.BlockCopy(BitConverter.GetBytes((short)bytes.Length), 0, buffer, 0, 2);
 					Buffer.BlockCopy(bytes, 0, buffer, 2, bytes.Length);
 					return buffer;
